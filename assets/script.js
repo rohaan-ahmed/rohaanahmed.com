@@ -22,7 +22,7 @@ return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'lig
 
 
 function setTheme(theme) {
-document.documentElement.dataset.theme = theme; // not used in CSS but left for extension
+document.documentElement.dataset.theme = theme; // extension point
 localStorage.setItem(STORAGE_KEY, theme);
 }
 
