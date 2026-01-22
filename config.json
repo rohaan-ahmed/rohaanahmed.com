@@ -1,0 +1,89 @@
+{
+  "personal": {
+    "firstName": "Rohaan",
+    "lastName": "Ahmed",
+    "logoInitials": "RA",
+    "tagline": "Artificial Intelligence | Advanced Technologies | Space | Defence"
+  },
+  "about": {
+    "bio": [
+      "Welcome to my corner of the digital universe. I'm passionate about pushing the boundaries of what's possible at the convergence of cutting-edge technologies.",
+      "With a focus on artificial intelligence, space exploration, and defence systems, I work on projects that shape the future of humanity's technological frontier."
+    ],
+    "focusAreas": [
+      {
+        "icon": "🤖",
+        "title": "Artificial Intelligence",
+        "description": "Machine learning, neural networks, and autonomous systems"
+      },
+      {
+        "icon": "⚡",
+        "title": "Advanced Technologies",
+        "description": "Emerging tech, quantum computing, and next-gen systems"
+      },
+      {
+        "icon": "🚀",
+        "title": "Space",
+        "description": "Satellite systems, space exploration, and orbital mechanics"
+      },
+      {
+        "icon": "🛡️",
+        "title": "Defence",
+        "description": "Security systems, strategic technology, and protection"
+      }
+    ]
+  },
+  "projects": [
+    {
+      "title": "CISERES",
+      "description": "AI-enabled satellite capability for disaster management that turns EO data into near real-time alerts for faster response.",
+      "image": "media/projects/ciseres.jpg",
+      "imageCredit": "Image Credit: Indra Space",
+      "tags": ["Space", "Disaster Management", "AI"],
+      "link": "https://deimos-space.com/ciseres/"
+    },
+    {
+      "title": "ExoMars \"Rosalind Franklin\" Rover",
+      "description": "European rover for Mars exploration, equipped with advanced sensing and decision-making capabilities to navigate the harsh Martian environment.",
+      "image": "media/projects/exomars.jpg",
+      "imageCredit": "Image Credit: European Space Agency",
+      "tags": ["Robotics", "Exploration", "Space"],
+      "link": "https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/Exploration/ExoMars/ExoMars_rover"
+    },
+    {
+      "title": "MoonNet",
+      "description": "First would-beAI to run on the Moon: Deep-learning inference payload intended to run on a lunar mission, demonstrating on-board AI processing for spaceflight imagery.",
+      "image": "media/projects/moonnet.jpg",
+      "imageCredit": "Image Credit: Mission Control Space",
+      "tags": ["Computer Vision", "AI", "Robotics"],
+      "link": "https://missioncontrolspace.com/stories/lunar-ai-demo-and-the-ispace-m1-mission/"
+    },
+    {
+      "title": "Canadarm2 (International Space Station)",
+      "description": "NASA and Canadian Space Agency led International Space Station robotics program work focused on logistics and support engineering for a flight-proven robotic system.",
+      "image": "media/projects/canadarm2.jpg",
+      "imageCredit": "Image Credit: NASA/CSA",
+      "tags": ["Robotics", "Space", "Research"],
+      "link": "https://www.asc-csa.gc.ca/eng/iss/canadarm2/"
+    },
+    {
+      "title": "OpenSAR Insight",
+      "description": "European Space Agency project to develop AI algorithms for Synthetic Aperture Radar (SAR) data analysis to detect and classify objects in Earth observation imagery.",
+      "image": "media/projects/opensar.jpg",
+      "imageCredit": "Image Credit: Indra Space",
+      "tags": ["SAR", "Earth Observation", "Advanced Technologies"],
+      "link": "https://lps25.esa.int/lps25-presentations/poster/OpenSAR%20Insight.pdf"
+    },
+    {
+      "title": "F-35 Joint Strike Fighter",
+      "description": "Power and Thermal Management System (PTMS) engineering for the F-35, supporting reliable electrical power distribution and thermal performance in a safety-critical fighter aircraft environment.",
+      "image": "media/projects/f35.jpg",
+      "imageCredit": "Image Credit: Lockheed Martin",
+      "tags": ["Defence", "Aviation", "Electrical Engineering"],
+      "link": "https://www.f35.com/f35/index.html"
+    }
+  ],
+  "footer": {
+    "tagline": "Built using Claude Code, Cursor, and other Generative AI tools."
+  }
+}
