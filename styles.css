@@ -905,6 +905,10 @@ section {
     transition: all var(--transition-medium);
 }
 
+.project-image-link {
+    display: block;
+}
+
 .project-image img {
     width: 100%;
     height: auto;
@@ -1157,6 +1161,25 @@ section {
         width: 100%;
         max-width: 280px;
         text-align: center;
+    }
+
+    .hero-tagline {
+        white-space: normal;
+        font-size: clamp(0.85rem, 4vw, 1.1rem);
+        line-height: 1.4;
+        padding: 0 16px;
+        text-wrap: balance;
+    }
+
+    .tagline-separator {
+        display: none;
+    }
+
+    .hero-tagline .highlight-cyan,
+    .hero-tagline .highlight-purple,
+    .hero-tagline .highlight-magenta {
+        display: block;
+        margin: 4px 0;
     }
 
     /* Projects grid */
