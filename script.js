@@ -256,9 +256,11 @@ function populatePage(config) {
                         </div>
                         <p class="project-description">${project.description}</p>
                         ${project.image ? `
-                            <div class="project-image">
-                                <img src="${project.image}" alt="${project.title}">
-                            </div>
+                            <a href="${project.link}" class="project-image-link" aria-label="View project: ${project.title}" target="_blank" rel="noopener noreferrer">
+                                <div class="project-image">
+                                    <img src="${project.image}" alt="${project.title}">
+                                </div>
+                            </a>
                             ${project.imageCredit ? `<p class="project-image-credit">${project.imageCredit}</p>` : ''}
                         ` : ''}
                     </div>
