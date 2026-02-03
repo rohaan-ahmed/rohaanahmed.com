@@ -21,16 +21,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Comic Sans MS', 'Chalkboard', cursive, sans-serif;
+            font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
             overflow: hidden;
         }
 
         #game-container {
             position: relative;
-            width: 100%;
-            max-width: 800px;
+            width: 100vw;
             height: 100vh;
-            max-height: 600px;
+            max-width: 100vw;
+            max-height: 100vh;
         }
 
         #game-canvas {
@@ -908,14 +908,40 @@
 
             const optionsContainer = document.getElementById('quiz-options');
             optionsContainer.innerHTML = '';
+            optionsContainer.style.display = 'grid';
 
-            currentQuiz.options.forEach(option => {
-                const btn = document.createElement('button');
-                btn.className = 'quiz-btn';
-                btn.textContent = option;
-                btn.onclick = () => checkAnswer(option, btn);
-                optionsContainer.appendChild(btn);
-            });
+            const spellingContainer = document.getElementById('spelling-input-container');
+            const spellingInput = document.getElementById('spelling-input');
+            const spellingSubmit = document.getElementById('spelling-submit');
+            spellingContainer.classList.remove('active');
+
+            if (currentQuiz.type === 'spelling' && gameMode === 'normal') {
+                optionsContainer.style.display = 'none';
+                spellingContainer.classList.add('active');
+                spellingInput.value = '';
+                spellingInput.focus();
+
+                const submitHandler = () => {
+                    const typed = spellingInput.value.trim();
+                    if (!typed) return;
+                    checkAnswer(typed, null);
+                };
+
+                spellingSubmit.onclick = submitHandler;
+                spellingInput.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        submitHandler();
+                    }
+                };
+            } else {
+                currentQuiz.options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quiz-btn';
+                    btn.textContent = option;
+                    btn.onclick = () => checkAnswer(option, btn);
+                    optionsContainer.appendChild(btn);
+                });
+            }
 
             showScreen('quiz-screen');
 
@@ -927,23 +953,29 @@
             if (!quizActive) return;
             quizActive = false;
 
-            const isCorrect = selected === currentQuiz.answer;
+            const normalizedSelected = currentQuiz.type === 'spelling'
+                ? selected.trim().toUpperCase()
+                : selected;
+            const isCorrect = normalizedSelected === currentQuiz.answer;
             const feedback = document.getElementById('quiz-feedback');
 
-            document.querySelectorAll('.quiz-btn').forEach(b => {
-                if (b.textContent === currentQuiz.answer) {
-                    b.classList.add('correct');
-                }
-            });
+            if (currentQuiz.type !== 'spelling' || gameMode !== 'normal') {
+                document.querySelectorAll('.quiz-btn').forEach(b => {
+                    if (b.textContent === currentQuiz.answer) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
 
             if (isCorrect) {
-                feedback.textContent = 'Great job!';
+                treasuresCollected += 10;
+                feedback.textContent = 'Great job! +10 Treasures!';
                 feedback.className = 'quiz-feedback correct';
                 score += 500;
                 playSound('win');
                 speak('Great job! That is correct!');
             } else {
-                btn.classList.add('wrong');
+                if (btn) btn.classList.add('wrong');
                 feedback.textContent = `The answer is ${currentQuiz.answer}`;
                 feedback.className = 'quiz-feedback wrong';
                 playSound('fall');
