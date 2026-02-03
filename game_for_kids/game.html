@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Space Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #2d1b4e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive, sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            max-height: 600px;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(100, 100, 255, 0.3);
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(10, 10, 46, 0.95);
+            border-radius: 10px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            color: #ffdd44;
+            font-size: clamp(24px, 6vw, 48px);
+            text-shadow: 0 0 20px rgba(255, 221, 68, 0.5);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #88ddff;
+            font-size: clamp(18px, 4vw, 28px);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #aaddff;
+            font-size: clamp(14px, 3vw, 20px);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: clamp(16px, 4vw, 24px);
+            font-family: inherit;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 200px;
+        }
+
+        .btn:hover, .btn:active {
+            transform: scale(1.05);
+        }
+
+        .btn-easy {
+            background: linear-gradient(180deg, #66ff88 0%, #44cc66 100%);
+            color: #004400;
+            box-shadow: 0 4px 15px rgba(102, 255, 136, 0.4);
+        }
+
+        .btn-normal {
+            background: linear-gradient(180deg, #ffaa44 0%, #dd8822 100%);
+            color: #442200;
+            box-shadow: 0 4px 15px rgba(255, 170, 68, 0.4);
+        }
+
+        .btn-start {
+            background: linear-gradient(180deg, #ff66aa 0%, #dd4488 100%);
+            color: #440022;
+            box-shadow: 0 4px 15px rgba(255, 102, 170, 0.4);
+        }
+
+        .btn-play-again {
+            background: linear-gradient(180deg, #66aaff 0%, #4488dd 100%);
+            color: #002244;
+            box-shadow: 0 4px 15px rgba(102, 170, 255, 0.4);
+        }
+
+        .mode-desc {
+            color: #aaa;
+            font-size: clamp(12px, 2.5vw, 14px);
+            margin-top: 5px;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .character-btn {
+            padding: 15px 10px;
+            font-size: clamp(14px, 3vw, 18px);
+            font-family: inherit;
+            border: 3px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .character-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .character-btn.selected {
+            border-color: #ffdd44;
+            background: rgba(255, 221, 68, 0.2);
+            box-shadow: 0 0 15px rgba(255, 221, 68, 0.3);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 300px;
+        }
+
+        .color-btn {
+            width: 60px;
+            height: 60px;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .color-btn.selected {
+            border-color: white;
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .color-pink { background: #ff88aa; }
+        .color-purple { background: #aa88ff; }
+        .color-teal { background: #44ddcc; }
+        .color-orange { background: #ffaa44; }
+        .color-blue { background: #4488ff; }
+        .color-green { background: #66dd44; }
+
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: none;
+            justify-content: space-between;
+            padding: 0 15px;
+            pointer-events: none;
+        }
+
+        #controls.active {
+            display: flex;
+        }
+
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.1s;
+        }
+
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .move-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: none;
+            justify-content: space-between;
+            color: white;
+            font-size: clamp(16px, 4vw, 24px);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #hud.active {
+            display: flex;
+        }
+
+        .hud-item {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        .final-score {
+            font-size: clamp(36px, 8vw, 64px);
+            color: #ffdd44;
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255, 221, 68, 0.5);
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @media (max-width: 500px) {
+            .character-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+
+        /* Quiz Screen Styles */
+        .quiz-question {
+            font-size: clamp(20px, 5vw, 32px);
+            color: #ffdd44;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 221, 68, 0.5);
+        }
+
+        .quiz-display {
+            font-size: clamp(48px, 12vw, 96px);
+            color: white;
+            margin: 20px 0;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .quiz-btn {
+            padding: 20px 30px;
+            font-size: clamp(24px, 6vw, 36px);
+            font-family: inherit;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .quiz-btn:hover, .quiz-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .quiz-btn.correct {
+            background: rgba(102, 255, 136, 0.5);
+            border-color: #66ff88;
+        }
+
+        .quiz-btn.wrong {
+            background: rgba(255, 102, 102, 0.5);
+            border-color: #ff6666;
+        }
+
+        .quiz-feedback {
+            font-size: clamp(24px, 5vw, 36px);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .quiz-feedback.correct {
+            color: #66ff88;
+        }
+
+        .quiz-feedback.wrong {
+            color: #ff6666;
+        }
+
+        .spelling-input-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0 20px;
+            width: 100%;
+        }
+
+        .spelling-input-container.active {
+            display: flex;
+        }
+
+        .spelling-input-field {
+            padding: 12px 16px;
+            font-size: clamp(18px, 4.5vw, 28px);
+            font-family: inherit;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            width: min(280px, 80vw);
+            text-transform: uppercase;
+        }
+
+        .spelling-input-field:focus {
+            outline: none;
+            border-color: #ffdd44;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Custom Name Input */
+        .custom-name-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .custom-name-container.active {
+            display: flex;
+        }
+
+        .custom-name-input {
+            padding: 12px 20px;
+            font-size: clamp(16px, 4vw, 24px);
+            font-family: inherit;
+            border: 3px solid #ffdd44;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            width: 200px;
+            margin-bottom: 10px;
+        }
+
+        .custom-name-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .custom-name-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-small {
+            padding: 8px 20px;
+            font-size: clamp(12px, 3vw, 16px);
+            min-width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="stars" id="stars-bg"></div>
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Title Screen -->
+        <div class="screen active" id="title-screen">
+            <h1>Space Adventure</h1>
+            <p class="subtitle">A Treasure Hunt in the Stars!</p>
+            <button class="btn btn-easy" onclick="selectMode('easy')">
+                Easy Mode
+                <div class="mode-desc">Ages 4-6 (Tap to jump!)</div>
+            </button>
+            <button class="btn btn-normal" onclick="selectMode('normal')">
+                Normal Mode
+                <div class="mode-desc">Ages 7+ (Full control)</div>
+            </button>
+        </div>
+
+        <!-- Character Selection Screen -->
+        <div class="screen" id="character-screen">
+            <h2>Choose Your Explorer!</h2>
+            <div class="character-grid" id="character-grid"></div>
+            <div class="custom-name-container" id="custom-name-container">
+                <input type="text" class="custom-name-input" id="custom-name-input"
+                       placeholder="Enter your name" maxlength="12" autocomplete="off">
+                <button class="btn btn-start btn-small" onclick="confirmCustomName()">OK</button>
+            </div>
+            <h2>Pick Your Color!</h2>
+            <div class="color-grid" id="color-grid"></div>
+            <button class="btn btn-start" onclick="startGame()" id="start-btn" disabled>
+                Start Adventure!
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div class="screen" id="quiz-screen">
+            <h2 id="quiz-title">Quiz Time!</h2>
+            <p class="quiz-question" id="quiz-question"></p>
+            <div class="quiz-display" id="quiz-display"></div>
+            <div class="quiz-options" id="quiz-options"></div>
+            <div class="spelling-input-container" id="spelling-input-container">
+                <input type="text" class="spelling-input-field" id="spelling-input"
+                       placeholder="Type here" maxlength="12" autocomplete="off"
+                       autocapitalize="characters" spellcheck="false">
+                <button class="btn btn-start btn-small" id="spelling-submit">Submit</button>
+            </div>
+            <p class="quiz-feedback" id="quiz-feedback"></p>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div class="screen" id="gameover-screen">
+            <h1 id="gameover-title">Great Job!</h1>
+            <p class="subtitle" id="gameover-message"></p>
+            <div class="final-score" id="final-score">0</div>
+            <p class="subtitle">Treasures Collected!</p>
+            <button class="btn btn-play-again" onclick="resetGame()">
+                Play Again
+            </button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-item" id="score-display">Score: 0</div>
+            <div class="hud-item" id="treasures-display">Treasures: 0</div>
+        </div>
+
+        <!-- Touch Controls -->
+        <div id="controls">
+            <div class="move-controls" id="move-controls">
+                <button class="control-btn" id="btn-left">&#9664;</button>
+                <button class="control-btn" id="btn-right">&#9654;</button>
+            </div>
+            <button class="control-btn" id="btn-jump">&#9650;</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Constants
+        const CHARACTERS = ['Sophia', 'Sarah', 'Sarina', 'Omer', 'Ali'];
+        const CHARACTER_AGES = {
+            'Sophia': 10,
+            'Sarah': 8,
+            'Sarina': 5,
+            'Omer': 4,
+            'Ali': 4
+        };
+        const COLORS = {
+            pink: '#ff88aa',
+            purple: '#aa88ff',
+            teal: '#44ddcc',
+            orange: '#ffaa44',
+            blue: '#4488ff',
+            green: '#66dd44'
+        };
+        const COLOR_NAMES = Object.keys(COLORS);
+
+        // Game State
+        let gameMode = 'easy';
+        let selectedCharacter = null;
+        let selectedColor = null;
+        let characterColors = {};
+        let gameRunning = false;
+        let gamePaused = false;
+        let score = 0;
+        let treasuresCollected = 0;
+
+        // Quiz State
+        let quizActive = false;
+        let currentQuiz = null;
+        let quizzesCompleted = 0;
+        let quizPositions = [800, 1800, 2800, 3800]; // X positions for quizzes
+        let quizTriggered = [];
+
+        // Canvas & Context
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth, canvasHeight;
+
+        // Game Objects
+        let player = null;
+        let platforms = [];
+        let treasures = [];
+        let npcs = [];
+        let particles = [];
+        let cameraX = 0;
+        let worldWidth = 5000;
+        let gameSpeed = 1;
+
+        // Controls
+        let keys = { left: false, right: false, jump: false };
+        let jumpPressed = false;
+
+        // Audio System
+        let audioCtx = null;
+        let musicPlaying = false;
+        let musicGain = null;
+        let musicOscillators = [];
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            musicGain = audioCtx.createGain();
+            musicGain.gain.value = 0.15;
+            musicGain.connect(audioCtx.destination);
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            switch(type) {
+                case 'jump':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+
+                case 'collect':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.setValueAtTime(659, now + 0.08);
+                    osc.frequency.setValueAtTime(784, now + 0.16);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    break;
+
+                case 'powerup':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.4);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                    break;
+
+                case 'win':
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.2, now + i * 0.15);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.3);
+                        o.start(now + i * 0.15);
+                        o.stop(now + i * 0.15 + 0.3);
+                    });
+                    break;
+
+                case 'fall':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                    break;
+
+                case 'quiz':
+                    // Magical chime for quiz
+                    const quizNotes = [659, 784, 988, 1319];
+                    quizNotes.forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.15, now + i * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
+                        o.start(now + i * 0.1);
+                        o.stop(now + i * 0.1 + 0.4);
+                    });
+                    break;
+            }
+        }
+
+        function startMusic() {
+            if (!audioCtx || musicPlaying) return;
+            musicPlaying = true;
+
+            // Create ambient space music with pads
+            const bassFreqs = [65.41, 73.42, 82.41, 87.31]; // C2, D2, E2, F2
+            let noteIndex = 0;
+
+            function playMusicNote() {
+                if (!musicPlaying) return;
+
+                // Pad sound
+                const pad = audioCtx.createOscillator();
+                const padGain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                pad.type = 'sine';
+                pad.frequency.value = bassFreqs[noteIndex] * 2;
+
+                filter.type = 'lowpass';
+                filter.frequency.value = 400;
+
+                pad.connect(filter);
+                filter.connect(padGain);
+                padGain.connect(musicGain);
+
+                const now = audioCtx.currentTime;
+                padGain.gain.setValueAtTime(0, now);
+                padGain.gain.linearRampToValueAtTime(0.4, now + 0.5);
+                padGain.gain.linearRampToValueAtTime(0.3, now + 1.5);
+                padGain.gain.linearRampToValueAtTime(0, now + 2.5);
+
+                pad.start(now);
+                pad.stop(now + 2.5);
+
+                // Sparkle overlay
+                if (Math.random() > 0.5) {
+                    const sparkle = audioCtx.createOscillator();
+                    const sparkleGain = audioCtx.createGain();
+                    sparkle.type = 'sine';
+                    sparkle.frequency.value = bassFreqs[noteIndex] * 8 + Math.random() * 200;
+                    sparkle.connect(sparkleGain);
+                    sparkleGain.connect(musicGain);
+                    sparkleGain.gain.setValueAtTime(0.1, now + 0.5);
+                    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + 1);
+                    sparkle.start(now + 0.5);
+                    sparkle.stop(now + 1);
+                }
+
+                noteIndex = (noteIndex + 1) % bassFreqs.length;
+
+                setTimeout(playMusicNote, 2000);
+            }
+
+            playMusicNote();
+        }
+
+        function stopMusic() {
+            musicPlaying = false;
+        }
+
+        function sayHello(name) {
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(`Hello ${name}`);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.2;
+                utterance.volume = 1;
+
+                // Try to use a friendly voice
+                const voices = speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v =>
+                    v.name.includes('Female') ||
+                    v.name.includes('Samantha') ||
+                    v.name.includes('Google UK English Female')
+                );
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85;
+                utterance.pitch = 1.1;
+                utterance.volume = 1;
+                const voices = speechSynthesis.getVoices();
+                const preferredVoice = voices.find(v =>
+                    v.name.includes('Female') ||
+                    v.name.includes('Samantha') ||
+                    v.name.includes('Google UK English Female')
+                );
+                if (preferredVoice) utterance.voice = preferredVoice;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Quiz System
+        function generateQuiz() {
+            const age = CHARACTER_AGES[selectedCharacter];
+
+            if (age <= 5) {
+                // Young kids: letters, numbers, simple addition
+                const quizTypes = ['letter', 'number', 'addition'];
+                const type = quizTypes[Math.floor(Math.random() * quizTypes.length)];
+
+                if (type === 'letter') {
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const correctLetter = letters[Math.floor(Math.random() * letters.length)];
+                    const options = [correctLetter];
+                    while (options.length < 4) {
+                        const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+                        if (!options.includes(randomLetter)) options.push(randomLetter);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'letter',
+                        question: 'What letter is this?',
+                        display: correctLetter,
+                        options: options,
+                        answer: correctLetter,
+                        speech: 'What letter is this?'
+                    };
+                } else if (type === 'number') {
+                    const correctNumber = Math.floor(Math.random() * 10) + 1;
+                    const options = [correctNumber];
+                    while (options.length < 4) {
+                        const randomNum = Math.floor(Math.random() * 10) + 1;
+                        if (!options.includes(randomNum)) options.push(randomNum);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'number',
+                        question: 'What number is this?',
+                        display: correctNumber.toString(),
+                        options: options.map(n => n.toString()),
+                        answer: correctNumber.toString(),
+                        speech: 'What number is this?'
+                    };
+                } else {
+                    const a = Math.floor(Math.random() * 5) + 1;
+                    const b = Math.floor(Math.random() * 5) + 1;
+                    const correctAnswer = a + b;
+                    const options = [correctAnswer];
+                    while (options.length < 4) {
+                        const randomAns = Math.floor(Math.random() * 10) + 1;
+                        if (!options.includes(randomAns)) options.push(randomAns);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'addition',
+                        question: `What is ${a} + ${b}?`,
+                        display: `${a} + ${b}`,
+                        options: options.map(n => n.toString()),
+                        answer: correctAnswer.toString(),
+                        speech: `What is ${a} plus ${b}?`
+                    };
+                }
+            } else {
+                // Older kids: spelling, multiplication
+                const quizTypes = ['spelling', 'multiplication'];
+                const type = quizTypes[Math.floor(Math.random() * quizTypes.length)];
+
+                if (type === 'spelling') {
+                    const words = [
+                        { word: 'STAR', wrong: ['STАР', 'STOR', 'STUR'] },
+                        { word: 'MOON', wrong: ['MONE', 'MOOM', 'MUNE'] },
+                        { word: 'SPACE', wrong: ['SPASE', 'SPAEC', 'SPECE'] },
+                        { word: 'PLANET', wrong: ['PLANIT', 'PLANNET', 'PLANNIT'] },
+                        { word: 'ROCKET', wrong: ['ROKET', 'ROCKIT', 'ROCKEY'] },
+                        { word: 'EARTH', wrong: ['ERTH', 'EARTHE', 'URTH'] },
+                        { word: 'GALAXY', wrong: ['GALXY', 'GALAXEY', 'GALEXY'] },
+                        { word: 'COMET', wrong: ['COMIT', 'COMMET', 'KOMET'] }
+                    ];
+                    const wordObj = words[Math.floor(Math.random() * words.length)];
+                    const options = [wordObj.word, ...wordObj.wrong.slice(0, 3)];
+                    shuffleArray(options);
+                    return {
+                        type: 'spelling',
+                        question: `How do you spell "${wordObj.word.toLowerCase()}"?`,
+                        display: `"${wordObj.word.toLowerCase()}"`,
+                        options: options,
+                        answer: wordObj.word,
+                        speech: `How do you spell ${wordObj.word.toLowerCase()}?`
+                    };
+                } else {
+                    const a = Math.floor(Math.random() * 9) + 2;
+                    const b = Math.floor(Math.random() * 9) + 2;
+                    const correctAnswer = a * b;
+                    const options = [correctAnswer];
+                    while (options.length < 4) {
+                        const offset = (Math.floor(Math.random() * 5) - 2) * a;
+                        const wrongAns = correctAnswer + offset;
+                        if (wrongAns > 0 && !options.includes(wrongAns)) options.push(wrongAns);
+                    }
+                    while (options.length < 4) {
+                        const randomAns = Math.floor(Math.random() * 50) + 4;
+                        if (!options.includes(randomAns)) options.push(randomAns);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'multiplication',
+                        question: `What is ${a} × ${b}?`,
+                        display: `${a} × ${b}`,
+                        options: options.map(n => n.toString()),
+                        answer: correctAnswer.toString(),
+                        speech: `What is ${a} times ${b}?`
+                    };
+                }
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function showQuiz() {
+            gamePaused = true;
+            quizActive = true;
+            currentQuiz = generateQuiz();
+
+            playSound('quiz');
+
+            document.getElementById('quiz-question').textContent = currentQuiz.question;
+            document.getElementById('quiz-display').textContent = currentQuiz.display;
+            document.getElementById('quiz-feedback').textContent = '';
+            document.getElementById('quiz-feedback').className = 'quiz-feedback';
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            currentQuiz.options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(option, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            showScreen('quiz-screen');
+
+            // Delay speech slightly so sound plays first
+            setTimeout(() => speak(currentQuiz.speech), 500);
+        }
+
+        function checkAnswer(selected, btn) {
+            if (!quizActive) return;
+            quizActive = false;
+
+            const isCorrect = selected === currentQuiz.answer;
+            const feedback = document.getElementById('quiz-feedback');
+
+            document.querySelectorAll('.quiz-btn').forEach(b => {
+                if (b.textContent === currentQuiz.answer) {
+                    b.classList.add('correct');
+                }
+            });
+
+            if (isCorrect) {
+                feedback.textContent = 'Great job!';
+                feedback.className = 'quiz-feedback correct';
+                score += 500;
+                playSound('win');
+                speak('Great job! That is correct!');
+            } else {
+                btn.classList.add('wrong');
+                feedback.textContent = `The answer is ${currentQuiz.answer}`;
+                feedback.className = 'quiz-feedback wrong';
+                playSound('fall');
+                speak(`Good try! The answer is ${currentQuiz.answer}`);
+            }
+
+            quizzesCompleted++;
+
+            setTimeout(() => {
+                showScreen('game');
+                gamePaused = false;
+                updateHUD();
+            }, 2500);
+        }
+
+        function checkQuizTrigger() {
+            for (let i = 0; i < quizPositions.length; i++) {
+                if (!quizTriggered[i] && player.x >= quizPositions[i] && player.x < quizPositions[i] + 50) {
+                    quizTriggered[i] = true;
+                    showQuiz();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Initialize stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars-bg');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Initialize character selection
+        function initCharacterSelection() {
+            const grid = document.getElementById('character-grid');
+            grid.innerHTML = '';
+            CHARACTERS.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'character-btn';
+                btn.textContent = name;
+                btn.onclick = () => selectCharacter(name, btn);
+                grid.appendChild(btn);
+            });
+
+            // Add custom character option
+            const customBtn = document.createElement('button');
+            customBtn.className = 'character-btn';
+            customBtn.innerHTML = '+ Custom';
+            customBtn.onclick = () => showCustomNameInput();
+            grid.appendChild(customBtn);
+
+            const colorGrid = document.getElementById('color-grid');
+            colorGrid.innerHTML = '';
+            COLOR_NAMES.forEach(color => {
+                const btn = document.createElement('button');
+                btn.className = `color-btn color-${color}`;
+                btn.onclick = () => selectColor(color, btn);
+                colorGrid.appendChild(btn);
+            });
+        }
+
+        function selectMode(mode) {
+            gameMode = mode;
+            showScreen('character-screen');
+
+            // Hide move controls in easy mode
+            document.getElementById('move-controls').style.display = mode === 'easy' ? 'none' : 'flex';
+        }
+
+        function selectCharacter(name, btn) {
+            selectedCharacter = name;
+            document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('custom-name-container').classList.remove('active');
+            checkStartButton();
+        }
+
+        function showCustomNameInput() {
+            document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('custom-name-container').classList.add('active');
+            document.getElementById('custom-name-input').focus();
+            selectedCharacter = null;
+            checkStartButton();
+        }
+
+        function confirmCustomName() {
+            const nameInput = document.getElementById('custom-name-input');
+            const name = nameInput.value.trim();
+            if (name.length > 0) {
+                selectedCharacter = name;
+                // Custom characters get age based on game mode
+                CHARACTER_AGES[name] = gameMode === 'easy' ? 5 : 8;
+                document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
+                checkStartButton();
+            }
+        }
+
+        function selectColor(color, btn) {
+            selectedColor = color;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            checkStartButton();
+        }
+
+        function checkStartButton() {
+            document.getElementById('start-btn').disabled = !(selectedCharacter && selectedColor);
+        }
+
+        function assignCharacterColors() {
+            characterColors = {};
+            characterColors[selectedCharacter] = selectedColor;
+
+            // All preset characters become NPCs (except if player chose one)
+            const npcCharacters = CHARACTERS.filter(c => c !== selectedCharacter);
+            const otherColors = COLOR_NAMES.filter(c => c !== selectedColor);
+
+            // Shuffle colors
+            for (let i = otherColors.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [otherColors[i], otherColors[j]] = [otherColors[j], otherColors[i]];
+            }
+
+            npcCharacters.forEach((char, i) => {
+                characterColors[char] = otherColors[i % otherColors.length];
+            });
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const screen = document.getElementById(screenId);
+            if (screen) {
+                screen.classList.add('active');
+            }
+
+            const isGame = screenId === 'game';
+            document.getElementById('hud').classList.toggle('active', isGame);
+            document.getElementById('controls').classList.toggle('active', isGame);
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            canvasWidth = canvas.width;
+            canvasHeight = canvas.height;
+        }
+
+        // Game initialization
+        function startGame() {
+            initAudio();
+            assignCharacterColors();
+            resizeCanvas();
+
+            score = 0;
+            treasuresCollected = 0;
+            cameraX = 0;
+            particles = [];
+            quizzesCompleted = 0;
+            quizTriggered = [];
+            gamePaused = false;
+
+            gameSpeed = gameMode === 'easy' ? 0.7 : 1;
+
+            // Create player
+            player = {
+                x: 100,
+                y: canvasHeight - 150,
+                width: 40,
+                height: 60,
+                vx: 0,
+                vy: 0,
+                onGround: false,
+                name: selectedCharacter,
+                color: COLORS[selectedColor]
+            };
+
+            // Generate world
+            generateWorld();
+
+            // Show game (hide all menu screens, show HUD and controls)
+            showScreen('game');
+
+            gameRunning = true;
+            updateHUD();
+            startMusic();
+            sayHello(selectedCharacter);
+            requestAnimationFrame(gameLoop);
+        }
+
+        function generateWorld() {
+            platforms = [];
+            treasures = [];
+            npcs = [];
+
+            const platformWidth = gameMode === 'easy' ? 300 : 150;
+            const gapSize = gameMode === 'easy' ? 50 : 120;
+
+            let x = 0;
+            let y = canvasHeight - 80;
+
+            // Generate platforms across the world
+            while (x < worldWidth) {
+                const width = platformWidth + Math.random() * 100;
+                const isMoving = gameMode === 'normal' && Math.random() < 0.15 && x > 300;
+
+                platforms.push({
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: 30,
+                    type: Math.random() < 0.3 ? 'station' : 'asteroid',
+                    moving: isMoving,
+                    moveRange: 50,
+                    moveSpeed: 1,
+                    moveOffset: 0
+                });
+
+                // Add treasures on platform
+                const treasureCount = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < treasureCount; i++) {
+                    treasures.push({
+                        x: x + 30 + i * 50,
+                        y: y - 50 - Math.random() * 30,
+                        type: ['star', 'gem', 'coin'][Math.floor(Math.random() * 3)],
+                        collected: false,
+                        bobOffset: Math.random() * Math.PI * 2
+                    });
+                }
+
+                x += width + gapSize + Math.random() * 50;
+                y = canvasHeight - 80 - Math.random() * 100;
+                y = Math.max(canvasHeight - 200, Math.min(canvasHeight - 80, y));
+            }
+
+            // Place NPCs (always use preset characters, filter out player if they chose one)
+            const npcCharacters = CHARACTERS.filter(c => c !== selectedCharacter);
+            const npcPositions = [600, 1200, 2000, 3000, 4200];
+
+            npcCharacters.forEach((char, i) => {
+                if (i < npcPositions.length) {
+                    const platform = platforms.find(p => p.x <= npcPositions[i] && p.x + p.width >= npcPositions[i]);
+                    if (platform) {
+                        npcs.push({
+                            x: npcPositions[i],
+                            y: platform.y - 60,
+                            name: char,
+                            color: COLORS[characterColors[char]],
+                            message: getRandomMessage(char),
+                            interacted: false
+                        });
+                    }
+                }
+            });
+        }
+
+        function getRandomMessage(name) {
+            const messages = [
+                `Hi! I'm ${name}! Here's a boost!`,
+                `${name} here! Keep going!`,
+                `You're doing great! -${name}`,
+                `${name} says: Catch some stars!`,
+                `${name}: You're amazing!`
+            ];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        // Game Loop
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!gameRunning) return;
+
+            const deltaTime = Math.min((timestamp - lastTime) / 16.67, 2);
+            lastTime = timestamp;
+
+            update(deltaTime);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update(dt) {
+            // Skip update when paused (quiz)
+            if (gamePaused) return;
+
+            // Check for quiz trigger
+            if (checkQuizTrigger()) return;
+
+            // Auto-run in easy mode
+            if (gameMode === 'easy') {
+                player.vx = 3 * gameSpeed;
+            } else {
+                // Manual control
+                if (keys.left) player.vx = -5 * gameSpeed;
+                else if (keys.right) player.vx = 5 * gameSpeed;
+                else player.vx *= 0.8;
+            }
+
+            // Jump
+            if (keys.jump && player.onGround && !jumpPressed) {
+                player.vy = gameMode === 'easy' ? -16 : -18;
+                player.onGround = false;
+                jumpPressed = true;
+                playSound('jump');
+            }
+            if (!keys.jump) jumpPressed = false;
+
+            // Gravity (lighter in easy mode)
+            const gravity = gameMode === 'easy' ? 0.4 : 0.6;
+            player.vy += gravity * dt;
+            player.vy = Math.min(player.vy, gameMode === 'easy' ? 12 : 20);
+
+            // Move player
+            player.x += player.vx * dt;
+            player.y += player.vy * dt;
+
+            // Update moving platforms
+            platforms.forEach(p => {
+                if (p.moving) {
+                    p.moveOffset += p.moveSpeed * 0.02 * dt;
+                    p.currentY = p.y + Math.sin(p.moveOffset) * p.moveRange;
+                } else {
+                    p.currentY = p.y;
+                }
+            });
+
+            // Platform collision
+            player.onGround = false;
+            platforms.forEach(p => {
+                const py = p.currentY || p.y;
+                if (player.x + player.width > p.x &&
+                    player.x < p.x + p.width &&
+                    player.y + player.height > py &&
+                    player.y + player.height < py + p.height + 20 &&
+                    player.vy >= 0) {
+                    player.y = py - player.height;
+                    player.vy = 0;
+                    player.onGround = true;
+
+                    // Move with platform
+                    if (p.moving) {
+                        player.y = py - player.height;
+                    }
+                }
+            });
+
+            // Collect treasures
+            treasures.forEach(t => {
+                if (!t.collected) {
+                    const dx = (player.x + player.width/2) - t.x;
+                    const dy = (player.y + player.height/2) - t.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < 40) {
+                        t.collected = true;
+                        score += t.type === 'star' ? 100 : t.type === 'gem' ? 50 : 25;
+                        treasuresCollected++;
+                        playSound('collect');
+
+                        // Particles
+                        for (let i = 0; i < 8; i++) {
+                            particles.push({
+                                x: t.x,
+                                y: t.y,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: (Math.random() - 0.5) * 6,
+                                life: 30,
+                                color: t.type === 'star' ? '#ffdd44' : t.type === 'gem' ? '#ff44aa' : '#44ddff'
+                            });
+                        }
+
+                        updateHUD();
+                    }
+                }
+            });
+
+            // NPC interaction
+            npcs.forEach(npc => {
+                if (!npc.interacted) {
+                    const dx = player.x - npc.x;
+                    const dy = player.y - npc.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < 80) {
+                        npc.interacted = true;
+                        score += 200;
+                        playSound('powerup');
+                        sayHello(npc.name);
+
+                        // Power-up effect
+                        for (let i = 0; i < 15; i++) {
+                            particles.push({
+                                x: npc.x,
+                                y: npc.y,
+                                vx: (Math.random() - 0.5) * 8,
+                                vy: (Math.random() - 0.5) * 8,
+                                life: 40,
+                                color: npc.color
+                            });
+                        }
+
+                        updateHUD();
+                    }
+                }
+            });
+
+            // Update particles
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                return p.life > 0;
+            });
+
+            // Camera follow
+            const targetCameraX = player.x - canvasWidth / 3;
+            cameraX += (targetCameraX - cameraX) * 0.1;
+            cameraX = Math.max(0, Math.min(worldWidth - canvasWidth, cameraX));
+
+            // Check for fall
+            if (player.y > canvasHeight + 100) {
+                if (gameMode === 'easy') {
+                    // In easy mode, respawn on nearest platform instead of game over
+                    const nearestPlatform = platforms.find(p => p.x <= player.x && p.x + p.width >= player.x - 100);
+                    if (nearestPlatform) {
+                        player.x = nearestPlatform.x + 50;
+                        player.y = nearestPlatform.y - player.height - 10;
+                        player.vy = 0;
+                        playSound('jump');
+                    } else {
+                        // Respawn at start of current section
+                        player.x = Math.max(100, player.x - 300);
+                        player.y = canvasHeight - 200;
+                        player.vy = 0;
+                        playSound('jump');
+                    }
+                } else {
+                    endGame(false);
+                }
+            }
+
+            // Check for win
+            if (player.x > worldWidth - 200) {
+                endGame(true);
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = `Score: ${score}`;
+            document.getElementById('treasures-display').textContent = `Treasures: ${treasuresCollected}`;
+        }
+
+        function render() {
+            // Clear
+            ctx.fillStyle = '#0a0a2e';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // Background stars
+            drawBackgroundStars();
+
+            // Distant planets
+            drawPlanets();
+
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            // Platforms
+            platforms.forEach(p => {
+                const py = p.currentY || p.y;
+                if (p.type === 'asteroid') {
+                    drawAsteroid(p.x, py, p.width, p.height);
+                } else {
+                    drawSpaceStation(p.x, py, p.width, p.height);
+                }
+            });
+
+            // Treasures
+            treasures.forEach(t => {
+                if (!t.collected) {
+                    const bobY = Math.sin(Date.now() / 300 + t.bobOffset) * 5;
+                    drawTreasure(t.x, t.y + bobY, t.type);
+                }
+            });
+
+            // NPCs
+            npcs.forEach(npc => {
+                drawCharacter(npc.x, npc.y, npc.color, npc.name, npc.interacted);
+                if (!npc.interacted) {
+                    // Speech bubble hint
+                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                    ctx.beginPath();
+                    ctx.roundRect(npc.x - 30, npc.y - 50, 60, 25, 10);
+                    ctx.fill();
+                    ctx.fillStyle = '#333';
+                    ctx.font = '12px Comic Sans MS';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Hi!', npc.x, npc.y - 32);
+                }
+            });
+
+            // Player
+            drawCharacter(player.x + player.width/2, player.y + player.height, player.color, player.name, false, true);
+
+            // Particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life / 40;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            ctx.restore();
+
+            // Progress bar
+            drawProgressBar();
+        }
+
+        function drawBackgroundStars() {
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 100; i++) {
+                const x = ((i * 73) % canvasWidth + cameraX * 0.1) % canvasWidth;
+                const y = (i * 47) % canvasHeight;
+                const size = (i % 3) + 1;
+                const alpha = 0.3 + Math.sin(Date.now() / 1000 + i) * 0.2;
+                ctx.globalAlpha = alpha;
+                ctx.fillRect(x, y, size, size);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function drawPlanets() {
+            // Distant planet 1
+            const p1x = canvasWidth * 0.8 - cameraX * 0.05;
+            ctx.fillStyle = '#ff6644';
+            ctx.beginPath();
+            ctx.arc(p1x, 100, 40, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#dd4422';
+            ctx.beginPath();
+            ctx.arc(p1x - 10, 95, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Distant planet 2
+            const p2x = canvasWidth * 0.3 - cameraX * 0.03;
+            ctx.fillStyle = '#44aadd';
+            ctx.beginPath();
+            ctx.arc(p2x, 150, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Saturn-like rings
+            ctx.strokeStyle = '#88ccff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(p2x, 150, 40, 10, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawAsteroid(x, y, w, h) {
+            ctx.fillStyle = '#665544';
+            ctx.beginPath();
+            ctx.moveTo(x + 10, y);
+            ctx.lineTo(x + w - 10, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + h/2);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - 10, y + h);
+            ctx.lineTo(x + 10, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h/2);
+            ctx.quadraticCurveTo(x, y, x + 10, y);
+            ctx.fill();
+
+            // Craters
+            ctx.fillStyle = '#554433';
+            ctx.beginPath();
+            ctx.arc(x + 30, y + 12, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w - 40, y + 15, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawSpaceStation(x, y, w, h) {
+            // Main platform
+            ctx.fillStyle = '#4466aa';
+            ctx.fillRect(x, y, w, h);
+
+            // Stripes
+            ctx.fillStyle = '#5577bb';
+            for (let i = 0; i < w; i += 20) {
+                ctx.fillRect(x + i, y, 10, h);
+            }
+
+            // Lights
+            ctx.fillStyle = '#ffdd44';
+            ctx.beginPath();
+            ctx.arc(x + 15, y + h/2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + w - 15, y + h/2, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawTreasure(x, y, type) {
+            ctx.save();
+
+            // Glow
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, 25);
+            if (type === 'star') {
+                gradient.addColorStop(0, 'rgba(255, 221, 68, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 221, 68, 0)');
+            } else if (type === 'gem') {
+                gradient.addColorStop(0, 'rgba(255, 68, 170, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 68, 170, 0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(68, 221, 255, 0.5)');
+                gradient.addColorStop(1, 'rgba(68, 221, 255, 0)');
+            }
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (type === 'star') {
+                ctx.fillStyle = '#ffdd44';
+                drawStar(x, y, 5, 15, 7);
+            } else if (type === 'gem') {
+                ctx.fillStyle = '#ff44aa';
+                ctx.beginPath();
+                ctx.moveTo(x, y - 12);
+                ctx.lineTo(x + 10, y);
+                ctx.lineTo(x, y + 12);
+                ctx.lineTo(x - 10, y);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#44ddff';
+                ctx.beginPath();
+                ctx.arc(x, y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#88eeff';
+                ctx.beginPath();
+                ctx.arc(x - 3, y - 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+
+            for (let i = 0; i < spikes; i++) {
+                ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+                rot += step;
+                ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+                rot += step;
+            }
+
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawCharacter(x, y, color, name, faded = false, isPlayer = false) {
+            ctx.save();
+            if (faded) ctx.globalAlpha = 0.5;
+
+            const headY = y - 45;
+            const bodyY = y - 30;
+
+            // Helmet (circle behind head)
+            ctx.fillStyle = 'rgba(150, 200, 255, 0.3)';
+            ctx.strokeStyle = 'rgba(200, 230, 255, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, headY, 22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Body
+            ctx.fillStyle = color;
+            ctx.fillRect(x - 12, bodyY, 24, 30);
+
+            // Head
+            ctx.fillStyle = '#ffddaa';
+            ctx.beginPath();
+            ctx.arc(x, headY, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(x - 5, headY - 2, 3, 0, Math.PI * 2);
+            ctx.arc(x + 5, headY - 2, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Smile
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, headY + 2, 6, 0.1 * Math.PI, 0.9 * Math.PI);
+            ctx.stroke();
+
+            // Name tag
+            ctx.fillStyle = isPlayer ? '#ffdd44' : 'white';
+            ctx.font = 'bold 12px Comic Sans MS';
+            ctx.textAlign = 'center';
+            ctx.fillText(name, x, y - 70);
+
+            ctx.restore();
+        }
+
+        function drawProgressBar() {
+            const barWidth = 150;
+            const barHeight = 10;
+            const x = canvasWidth - barWidth - 20;
+            const y = 15;
+
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(x, y, barWidth, barHeight);
+
+            const progress = player.x / worldWidth;
+            ctx.fillStyle = '#66ff88';
+            ctx.fillRect(x, y, barWidth * progress, barHeight);
+
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, barWidth, barHeight);
+
+            // Finish flag
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Comic Sans MS';
+            ctx.fillText('🚀', x + barWidth + 5, y + 10);
+        }
+
+        function endGame(won) {
+            gameRunning = false;
+            stopMusic();
+            playSound(won ? 'win' : 'fall');
+
+            document.getElementById('gameover-title').textContent = won ? 'You Did It!' : 'Great Try!';
+            document.getElementById('gameover-message').textContent = won
+                ? `${selectedCharacter} completed the space adventure!`
+                : `${selectedCharacter} fell into space. Try again!`;
+            document.getElementById('final-score').textContent = score;
+
+            document.getElementById('hud').classList.remove('active');
+            document.getElementById('controls').classList.remove('active');
+            showScreen('gameover-screen');
+        }
+
+        function resetGame() {
+            // Keep the same character and mode, just restart
+            startGame();
+        }
+
+        // Controls Setup
+        function setupControls() {
+            // Keyboard
+            window.addEventListener('keydown', e => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.jump = true;
+            });
+
+            window.addEventListener('keyup', e => {
+                if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+                if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.jump = false;
+            });
+
+            // Touch controls
+            const btnLeft = document.getElementById('btn-left');
+            const btnRight = document.getElementById('btn-right');
+            const btnJump = document.getElementById('btn-jump');
+
+            // Prevent default touch behavior
+            [btnLeft, btnRight, btnJump].forEach(btn => {
+                btn.addEventListener('touchstart', e => e.preventDefault());
+                btn.addEventListener('touchend', e => e.preventDefault());
+            });
+
+            btnLeft.addEventListener('touchstart', () => keys.left = true);
+            btnLeft.addEventListener('touchend', () => keys.left = false);
+            btnLeft.addEventListener('mousedown', () => keys.left = true);
+            btnLeft.addEventListener('mouseup', () => keys.left = false);
+            btnLeft.addEventListener('mouseleave', () => keys.left = false);
+
+            btnRight.addEventListener('touchstart', () => keys.right = true);
+            btnRight.addEventListener('touchend', () => keys.right = false);
+            btnRight.addEventListener('mousedown', () => keys.right = true);
+            btnRight.addEventListener('mouseup', () => keys.right = false);
+            btnRight.addEventListener('mouseleave', () => keys.right = false);
+
+            btnJump.addEventListener('touchstart', () => keys.jump = true);
+            btnJump.addEventListener('touchend', () => keys.jump = false);
+            btnJump.addEventListener('mousedown', () => keys.jump = true);
+            btnJump.addEventListener('mouseup', () => keys.jump = false);
+            btnJump.addEventListener('mouseleave', () => keys.jump = false);
+
+            // Tap anywhere to jump in easy mode
+            canvas.addEventListener('touchstart', e => {
+                if (gameMode === 'easy' && gameRunning) {
+                    keys.jump = true;
+                    setTimeout(() => keys.jump = false, 100);
+                }
+            });
+
+            canvas.addEventListener('click', e => {
+                if (gameMode === 'easy' && gameRunning) {
+                    keys.jump = true;
+                    setTimeout(() => keys.jump = false, 100);
+                }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            createStars();
+            initCharacterSelection();
+            setupControls();
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Allow Enter key to confirm custom name
+            document.getElementById('custom-name-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    confirmCustomName();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
