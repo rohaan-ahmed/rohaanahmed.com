@@ -129,7 +129,7 @@
         }
 
         .mode-desc {
-            color: #aaa;
+            color: #000;
             font-size: clamp(12px, 2.5vw, 14px);
             margin-top: 5px;
         }
@@ -448,6 +448,7 @@
         <div class="screen active" id="title-screen">
             <h1>Space Adventure</h1>
             <p class="subtitle">A Treasure Hunt in the Stars!</p>
+            <p class="subtitle" id="high-score-overview"></p>
             <button class="btn btn-easy" onclick="selectMode('easy')">
                 Easy Mode
                 <div class="mode-desc">Ages 4-6 (Tap to jump!)</div>
@@ -462,11 +463,6 @@
         <div class="screen" id="character-screen">
             <h2>Choose Your Explorer!</h2>
             <div class="character-grid" id="character-grid"></div>
-            <div class="custom-name-container" id="custom-name-container">
-                <input type="text" class="custom-name-input" id="custom-name-input"
-                       placeholder="Enter your name" maxlength="12" autocomplete="off">
-                <button class="btn btn-start btn-small" onclick="confirmCustomName()">OK</button>
-            </div>
             <h2>Pick Your Color!</h2>
             <div class="color-grid" id="color-grid"></div>
             <button class="btn btn-start" onclick="startGame()" id="start-btn" disabled>
@@ -495,6 +491,7 @@
             <p class="subtitle" id="gameover-message"></p>
             <div class="final-score" id="final-score">0</div>
             <p class="subtitle">Treasures Collected!</p>
+            <p class="subtitle" id="gameover-high-score"></p>
             <button class="btn btn-play-again" onclick="resetGame()">
                 Play Again
             </button>
@@ -518,13 +515,14 @@
 
     <script>
         // Game Constants
-        const CHARACTERS = ['Sophia', 'Sarah', 'Sarina', 'Omer', 'Ali'];
+        const CHARACTERS = ['Sophia', 'Sarah', 'Sarina', 'Omer', 'Ali', 'Hamza'];
         const CHARACTER_AGES = {
             'Sophia': 10,
             'Sarah': 8,
             'Sarina': 5,
             'Omer': 4,
-            'Ali': 4
+            'Ali': 4,
+            'Hamza': 6
         };
         const COLORS = {
             pink: '#ff88aa',
@@ -577,6 +575,36 @@
         let musicPlaying = false;
         let musicGain = null;
         let musicOscillators = [];
+
+        // High score storage
+        function getHighScores() {
+            try {
+                return JSON.parse(localStorage.getItem('space_adventure_high_scores')) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveHighScore(name, value) {
+            const scores = getHighScores();
+            if (!scores[name] || value > scores[name]) {
+                scores[name] = value;
+                localStorage.setItem('space_adventure_high_scores', JSON.stringify(scores));
+            }
+        }
+
+        function getHighScore(name) {
+            const scores = getHighScores();
+            return scores[name] || 0;
+        }
+
+        function updateHighScoreOverview() {
+            const scores = getHighScores();
+            const entries = Object.keys(scores).map(name => `${name}: ${scores[name]}`);
+            document.getElementById('high-score-overview').textContent = entries.length
+                ? `High Scores: ${entries.join(' • ')}`
+                : 'No high scores yet. Be the first!';
+        }
 
         function initAudio() {
             if (audioCtx) return;
@@ -781,52 +809,21 @@
         // Quiz System
         function generateQuiz() {
             const age = CHARACTER_AGES[selectedCharacter];
+            const youngQuizNames = ['Omer', 'Ali', 'Sarina'];
+            const isYoungQuiz = youngQuizNames.includes(selectedCharacter);
 
-            if (age <= 5) {
-                // Young kids: letters, numbers, simple addition
-                const quizTypes = ['letter', 'number', 'addition'];
+            if (age <= 5 || isYoungQuiz) {
+                // Young kids: addition/subtraction, phonics, first letter, number/letter recognition
+                const quizTypes = ['addition', 'subtraction', 'phonics', 'first-letter', 'number-audio', 'letter-audio'];
                 const type = quizTypes[Math.floor(Math.random() * quizTypes.length)];
 
-                if (type === 'letter') {
-                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                    const correctLetter = letters[Math.floor(Math.random() * letters.length)];
-                    const options = [correctLetter];
-                    while (options.length < 4) {
-                        const randomLetter = letters[Math.floor(Math.random() * letters.length)];
-                        if (!options.includes(randomLetter)) options.push(randomLetter);
-                    }
-                    shuffleArray(options);
-                    return {
-                        type: 'letter',
-                        question: 'What letter is this?',
-                        display: correctLetter,
-                        options: options,
-                        answer: correctLetter,
-                        speech: 'What letter is this?'
-                    };
-                } else if (type === 'number') {
-                    const correctNumber = Math.floor(Math.random() * 10) + 1;
-                    const options = [correctNumber];
-                    while (options.length < 4) {
-                        const randomNum = Math.floor(Math.random() * 10) + 1;
-                        if (!options.includes(randomNum)) options.push(randomNum);
-                    }
-                    shuffleArray(options);
-                    return {
-                        type: 'number',
-                        question: 'What number is this?',
-                        display: correctNumber.toString(),
-                        options: options.map(n => n.toString()),
-                        answer: correctNumber.toString(),
-                        speech: 'What number is this?'
-                    };
-                } else {
-                    const a = Math.floor(Math.random() * 5) + 1;
-                    const b = Math.floor(Math.random() * 5) + 1;
+                if (type === 'addition') {
+                    const a = Math.floor(Math.random() * 6);
+                    const b = Math.floor(Math.random() * 6);
                     const correctAnswer = a + b;
                     const options = [correctAnswer];
                     while (options.length < 4) {
-                        const randomAns = Math.floor(Math.random() * 10) + 1;
+                        const randomAns = Math.floor(Math.random() * 11);
                         if (!options.includes(randomAns)) options.push(randomAns);
                     }
                     shuffleArray(options);
@@ -837,6 +834,101 @@
                         options: options.map(n => n.toString()),
                         answer: correctAnswer.toString(),
                         speech: `What is ${a} plus ${b}?`
+                    };
+                } else if (type === 'subtraction') {
+                    const a = Math.floor(Math.random() * 6);
+                    const b = Math.floor(Math.random() * (a + 1));
+                    const correctAnswer = a - b;
+                    const options = [correctAnswer];
+                    while (options.length < 4) {
+                        const randomAns = Math.floor(Math.random() * 6);
+                        if (!options.includes(randomAns)) options.push(randomAns);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'subtraction',
+                        question: `What is ${a} - ${b}?`,
+                        display: `${a} - ${b}`,
+                        options: options.map(n => n.toString()),
+                        answer: correctAnswer.toString(),
+                        speech: `What is ${a} minus ${b}?`
+                    };
+                } else if (type === 'phonics') {
+                    const phonics = [
+                        { sound: 'Ha', letter: 'H' },
+                        { sound: 'Ba', letter: 'B' },
+                        { sound: 'Ma', letter: 'M' },
+                        { sound: 'Sa', letter: 'S' },
+                        { sound: 'Ta', letter: 'T' },
+                        { sound: 'La', letter: 'L' }
+                    ];
+                    const pick = phonics[Math.floor(Math.random() * phonics.length)];
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const options = [pick.letter];
+                    while (options.length < 4) {
+                        const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+                        if (!options.includes(randomLetter)) options.push(randomLetter);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'phonics',
+                        question: `Which letter makes the sound "${pick.sound}"?`,
+                        display: '',
+                        options: options,
+                        answer: pick.letter,
+                        speech: `Which letter makes the sound ${pick.sound}?`
+                    };
+                } else if (type === 'first-letter') {
+                    const words = ['STORY', 'SPACE', 'ROCKET', 'PLANET', 'STAR', 'MOON', 'ALIEN', 'COMET'];
+                    const word = words[Math.floor(Math.random() * words.length)];
+                    const correctLetter = word[0];
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const options = [correctLetter];
+                    while (options.length < 4) {
+                        const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+                        if (!options.includes(randomLetter)) options.push(randomLetter);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'first-letter',
+                        question: `What is the first letter of the word ${word}?`,
+                        display: '',
+                        options: options,
+                        answer: correctLetter,
+                        speech: `What is the first letter of the word ${word}?`
+                    };
+                } else if (type === 'number-audio') {
+                    const correctNumber = Math.floor(Math.random() * 10);
+                    const options = [correctNumber];
+                    while (options.length < 4) {
+                        const randomNum = Math.floor(Math.random() * 10);
+                        if (!options.includes(randomNum)) options.push(randomNum);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'number-audio',
+                        question: 'What number do you hear?',
+                        display: '',
+                        options: options.map(n => n.toString()),
+                        answer: correctNumber.toString(),
+                        speech: `What number is ${correctNumber}?`
+                    };
+                } else {
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const correctLetter = letters[Math.floor(Math.random() * letters.length)];
+                    const options = [correctLetter];
+                    while (options.length < 4) {
+                        const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+                        if (!options.includes(randomLetter)) options.push(randomLetter);
+                    }
+                    shuffleArray(options);
+                    return {
+                        type: 'letter-audio',
+                        question: 'What letter do you hear?',
+                        display: '',
+                        options: options,
+                        answer: correctLetter,
+                        speech: `What letter is ${correctLetter}?`
                     };
                 }
             } else {
@@ -979,7 +1071,7 @@
                 feedback.className = 'quiz-feedback correct';
                 score += 500;
                 playSound('win');
-                speak('Great job! That is correct!');
+                speak('Good job! You get 10 points!');
             } else {
                 if (btn) btn.classList.add('wrong');
                 feedback.textContent = `The answer is ${currentQuiz.answer}`;
@@ -1037,8 +1129,8 @@
             // Add custom character option
             const customBtn = document.createElement('button');
             customBtn.className = 'character-btn';
-            customBtn.innerHTML = '+ Custom';
-            customBtn.onclick = () => showCustomNameInput();
+            customBtn.innerHTML = '+ Other';
+            customBtn.onclick = () => selectCharacter('Other', customBtn);
             grid.appendChild(customBtn);
 
             const colorGrid = document.getElementById('color-grid');
@@ -1054,6 +1146,7 @@
         function selectMode(mode) {
             gameMode = mode;
             showScreen('character-screen');
+            updateHighScoreOverview();
 
             // Hide move controls in easy mode
             document.getElementById('move-controls').style.display = mode === 'easy' ? 'none' : 'flex';
@@ -1062,29 +1155,15 @@
         function selectCharacter(name, btn) {
             selectedCharacter = name;
             document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            document.getElementById('custom-name-container').classList.remove('active');
+            if (btn) btn.classList.add('selected');
+            if (name === 'Other') {
+                CHARACTER_AGES[name] = gameMode === 'easy' ? 5 : 8;
+            }
             checkStartButton();
         }
 
         function showCustomNameInput() {
-            document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById('custom-name-container').classList.add('active');
-            document.getElementById('custom-name-input').focus();
-            selectedCharacter = null;
-            checkStartButton();
-        }
-
-        function confirmCustomName() {
-            const nameInput = document.getElementById('custom-name-input');
-            const name = nameInput.value.trim();
-            if (name.length > 0) {
-                selectedCharacter = name;
-                // Custom characters get age based on game mode
-                CHARACTER_AGES[name] = gameMode === 'easy' ? 5 : 8;
-                document.querySelectorAll('.character-btn').forEach(b => b.classList.remove('selected'));
-                checkStartButton();
-            }
+            selectCharacter('Other', null);
         }
 
         function selectColor(color, btn) {
@@ -1729,11 +1808,15 @@
             stopMusic();
             playSound(won ? 'win' : 'fall');
 
+            saveHighScore(selectedCharacter, score);
+            const highScore = getHighScore(selectedCharacter);
+
             document.getElementById('gameover-title').textContent = won ? 'You Did It!' : 'Great Try!';
             document.getElementById('gameover-message').textContent = won
                 ? `${selectedCharacter} completed the space adventure!`
                 : `${selectedCharacter} fell into space. Try again!`;
             document.getElementById('final-score').textContent = score;
+            document.getElementById('gameover-high-score').textContent = `Highest Score: ${highScore}`;
 
             document.getElementById('hud').classList.remove('active');
             document.getElementById('controls').classList.remove('active');
@@ -1811,14 +1894,10 @@
             initCharacterSelection();
             setupControls();
             resizeCanvas();
+            updateHighScoreOverview();
             window.addEventListener('resize', resizeCanvas);
 
-            // Allow Enter key to confirm custom name
-            document.getElementById('custom-name-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    confirmCustomName();
-                }
-            });
+            // No custom name input for Other
         });
     </script>
 </body>
